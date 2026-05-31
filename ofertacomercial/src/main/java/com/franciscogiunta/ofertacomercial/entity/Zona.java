@@ -1,40 +1,44 @@
 package com.franciscogiunta.ofertacomercial.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.*;
-import org.hibernate.proxy.HibernateProxy;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "zonas")
 @Getter
 @Setter
-@ToString
-@RequiredArgsConstructor
+@NoArgsConstructor
 public class Zona {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "zona_id")
     private Integer zonaId;
-    @Column(name = "nombre", nullable = false)
+
+    @Column(name = "nombre", nullable = false, unique = true)
     private String nombre;
 
-    @Override
-    public final boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null) return false;
-        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
-        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
-        if (thisEffectiveClass != oEffectiveClass) return false;
-        Zona zona = (Zona) o;
-        return getZonaId() != null && Objects.equals(getZonaId(), zona.getZonaId());
+    @OneToMany(mappedBy = "zona", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Localidad> localidades = new ArrayList<>();
+
+    public Zona(String nombre) {
+        this.nombre = nombre;
+    }
+    
+    // Método auxiliar para agregar localidades manteniendo la relación bidireccional
+    public void addLocalidad(Localidad localidad) {
+        localidades.add(localidad);
+        localidad.setZona(this);
     }
 
-    @Override
-    public final int hashCode() {
-        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    public void removeLocalidad(Localidad localidad) {
+        localidades.remove(localidad);
+        localidad.setZona(null);
     }
 }
